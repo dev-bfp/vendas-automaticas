@@ -168,10 +168,32 @@
 </style>
 <script>
 
-window.addEventListener("beforeunload", () => {
-    localStorage.setItem('loginAutorizado', "false");
-    localStorage.removeItem('vendedores');
+// window.addEventListener("beforeunload", () => {
+//     localStorage.setItem('loginAutorizado', "false");
+//     localStorage.removeItem('vendedores');
+// });
+
+// Salva a sessão ativa no sessionStorage quando o usuário está na página
+sessionStorage.setItem('sessaoAtiva', "true");
+
+// Adiciona o evento de antes de sair da página
+window.addEventListener("beforeunload", (event) => {
+    // Verifica se a sessão ainda está ativa
+    if (sessionStorage.getItem('sessaoAtiva') === "true") {
+        // Se a sessão ativa existe, significa que a página foi apenas atualizada
+        sessionStorage.removeItem('sessaoAtiva');
+    } else {
+        // Se não há sessão ativa, então o usuário realmente está saindo da página
+        localStorage.setItem('loginAutorizado', "false");
+        localStorage.removeItem('vendedores');
+    }
 });
+
+// Ao recarregar a página, reativa a sessão
+window.addEventListener("load", () => {
+    sessionStorage.setItem('sessaoAtiva', "true");
+});
+
 
 // Função para buscar endereço via API do ViaCEP
 async function buscarEndereco(cep) {
