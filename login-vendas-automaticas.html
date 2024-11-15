@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendas Automáticas Red Fibra</title>
+    <style>
+        /* Estilos básicos e centralização */
+    body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        margin: 0;
+        background-color: rgba(164, 241, 248, 0.156);
+    }
+
+    .login-container {
+        width: 100%;
+        max-width: 300px;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        background-color: #fff;
+    }
+
+    .login-container h2 {
+        margin-top: 0;
+        font-size: 1.5em;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+        width: 100%;
+        padding: 12px;
+        margin: 10px 0;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-sizing: border-box;
+        font-size: 1em;
+    }
+
+    button {
+        width: 100%;
+        padding: 12px;
+        background-color: #28a745;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 1em;
+        margin-top: 10px;
+        transition: background-color 0.3s;
+    }
+
+    button:hover {
+        background-color: #218838;
+    }
+
+    .message {
+        margin-top: 10px;
+        font-weight: bold;
+        font-size: 0.9em;
+    }
+
+    /* Media Queries para Responsividade */
+
+    /* Dispositivos móveis em modo retrato (smartphones menores) */
+    @media (max-width: 480px) {
+        .login-container {
+            padding: 15px;
+            max-width: 90%;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            padding: 10px;
+            font-size: 0.9em;
+        }
+
+        button {
+            padding: 10px;
+            font-size: 0.9em;
+        }
+
+        .login-container h2 {
+            font-size: 1.3em;
+        }
+    }
+
+    /* Tablets e dispositivos maiores */
+    @media (min-width: 481px) and (max-width: 768px) {
+        .login-container {
+            max-width: 400px;
+        }
+    }
+
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>Vendas Automáticas</h2>
+        <h2>Red Fibra</h2>
+        <form id="loginForm">
+            <input type="text" id="username" placeholder="Usuário" required>
+            <input type="password" id="password" placeholder="Senha" required>
+            <button type="submit">Entrar</button>
+            <div id="message" class="message"></div>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (event) => {
+            event.preventDefault(); // Evita o envio padrão do formulário
+
+            // Obtém os valores de usuário e senha
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const messageDiv = document.getElementById('message');
+            const url = new URL('https://webhookn8nv2.mychat.solutions/webhook/login-vendas-automaticas');
+
+            try {
+                // Envia a requisição para o webhook
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ requisição: 'login', id_condominio: '1', username, password })
+                });
+
+                // Processa a resposta do webhook
+                const result = await response.json();
+                // alert(result[0].vendedores['vendedor'])
+
+                // Verifica o status do acesso
+                if (result[0].status === "Acesso negado") {
+                    // Exibe a mensagem de acesso negado
+                    // alert(result[0].message)
+                    messageDiv.textContent = result[0].message;
+                    messageDiv.style.color = "red";
+
+                } else if (result[0].status === "Acesso autorizado") {
+                        vendedor = result[0].vendedores['vendedor'].split(",")
+                        // alert(vendedor)
+                        vendedor_nome = vendedor[0].split(" - ")[1]
+                        messageDiv.textContent = "Bem-vindo(a) " + vendedor_nome ;
+                        messageDiv.style.color = "green";
+                        localStorage.setItem('vendedores', result[0].vendedores['vendedor']);
+                        localStorage.setItem('loginAutorizado', "true"); // Marca login como autorizado
+
+                        setTimeout(() => {
+                            window.location.href = "vendas-automaticas.html";
+                        }, 2000); // Aguarda 2 segundos antes de redirecionar
+                } else {
+                    // Lida com respostas inesperadas
+                    messageDiv.textContent = "Erro desconhecido.";
+                    messageDiv.style.color = "red";
+                }
+            } catch (error) {
+                // Exibe erros de rede ou problemas com a requisição
+                messageDiv.textContent = "Erro ao conectar ao servidor.";
+                messageDiv.style.color = "red";
+                console.error('Erro:', error);
+            }
+        });
+    </script>
+</body>
+</html>
