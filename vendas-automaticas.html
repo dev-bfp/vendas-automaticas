@@ -393,7 +393,7 @@ function getValueOrEmpty(elementId) {
 document.addEventListener('DOMContentLoaded', () => {
     if (localStorage.getItem('loginAutorizado') !== "true") {
         alert("Acesso negado. Realize o login para continuar.");
-        window.location.href = "login-vendas-automaticas.html"; // Redireciona para a página de login
+        window.location.href = "index.html"; // Redireciona para a página de login
     }else{
         carregarCondominios()
         const vendedoresSelect = document.getElementById('vendedor');
