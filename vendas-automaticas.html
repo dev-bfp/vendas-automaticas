@@ -137,6 +137,11 @@
     margin-right: 0px; /* Espaço entre os checkboxes */
     }
 
+    #temCadastro label {
+    display: inline-block;
+    margin-right: 0px; /* Espaço entre os checkboxes */
+    }
+
     #moradia label {
         display: inline-block;
         margin-right: 0px; /* Espaço entre os checkboxes */
@@ -212,8 +217,33 @@ async function buscarEndereco(cep) {
 }
 
 // Função de validação do CPF
-function validarCPF(cpf) {
+async function validarCPF(cpf) {
+    alert(cpf)
     cpf = cpf.replace(/[^\d]+/g, ''); // Remove caracteres não numéricos
+    cpf_formatado = cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    const url = 'https://webhookn8nv2.mychat.solutions/webhook/login-vendas-automaticas';
+
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({"requisição": "check_cpf",
+                "cnpj_cpf": cpf_formatado})
+     });
+
+    const dados_cpf = await response.text();
+    if (dados_cpf != "Sem cadastro" ){
+        document.getElementById('message_cpf').innerText = dados_cpf
+        temCadastro.style.display = 'table-row';
+    }
+    if (cpf == "" ){
+        document.getElementById('message_cpf').innerText = ''
+    }
+
+    // alert(dados_cpf);
+
+
 
     if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) {
         alert("CPF inválido!");
@@ -524,10 +554,16 @@ async function enviarFormulario(event) {
     <h1>Formulário de Vendas</h1>
     <table border="1">
         <tr><th>Nome:</th><td><input type="text" id="nome" ></td></tr>
-        <tr><th>CPF:</th><td><input type="text" id="cpf"  onchange="validarCPF(this.value)"></td></tr>
+        <tr><th>CPF:</th><td><input type="text" id="cpf"  onchange="validarCPF(this.value)">
+            <div id="message_cpf" class="message"></div></td></tr>
+        <tr id="temCadastro1" style="display: none;"><th>Segundo contrato?:</th><td id="temCadastro" style="text-align: center;">
+            <label><input type="radio" id="N" name="temCadastro" value="N" > Não</label>
+            <label><input type="radio" id="S" name="temCadastro" value="S" > Sim</label>
+        </td></tr>
         <tr><th>RG:</th><td><input type="text" id="rg" ></td></tr>
         <tr><th>Data de Nascimento:</th><td><input type="date" id="dataNascimento" ></td></tr>
-        <tr><th colspan="2" ><button id="ARCA" onclick="alert('Botão ARCA clicado!')">Consulta SCPC e Serasa</button></td></tr>
+        <tr><th colspan="2"><button type="button" id="ARCA" onclick="alert('Botão ARCA clicado!')">Consulta SCPC e Serasa</button></td></tr>
+        <tr><th>Resultado Consulta:</th><td><div id="restricaoInfo"></div></td></tr>
         <tr><th>Celular:</th><td><input type="text" id="celular"  onchange="validarCelular(this.value)"></td></tr>
         <tr><th>WhatsApp:</th><td><input type="text" id="whatsapp"  onchange="validarCelular(this.value)"></td></tr>
         <tr><th>Email:</th><td><input type="email" id="email"  onchange="validarEmail(this.value)"></td></tr>
