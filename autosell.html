@@ -218,7 +218,7 @@ async function buscarEndereco(cep) {
 // Função de validação do CPF
 async function validarCPF(cpf) {
     if (cpf == "" ){
-        
+        temCadastro1.style.display = 'none';
         document.getElementById('message_cpf').innerText = ''
     }
     cpf = cpf.replace(/[^\d]+/g, ''); // Remove caracteres não numéricos
