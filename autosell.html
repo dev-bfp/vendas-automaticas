@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -148,24 +149,51 @@
     }
 
     #ARCA {
-        display: inline-table;
-        padding: 8px 10px;
-        background-color: #07d870; /* Cor de fundo azul */
-        color: rgb(0, 0, 0); /* Cor do texto */
-        font-weight: bold;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 16px;
-        transition: background-color 0.3s, transform 0.2s; /* Transições suaves */
-        margin-top: 0px;
-        
-        
+        display: block;           /* Garante que o botão se comporte como um bloco */
+        width: auto;              /* Ajuste automático do tamanho ao conteúdo */
+        padding: 8px 16px;        /* Menor preenchimento */
+        font-size: 14px;          /* Reduz o tamanho da fonte */
+        margin: 0px auto;        /* Centraliza horizontalmente dentro do elemento pai */
     }
+
 
     /* Efeito ao passar o mouse sobre o botão */
     #ARCA:hover {
         background-color: #45a049; /* Cor do botão quando hover */
+    }
+
+    #cpf-icon {
+    color: green; /* Cor padrão para o ícone de sucesso */
+    display: none; /* Inicialmente oculto */
+    }
+
+    #cpf-icon.valid {
+        display: inline; /* Exibido se válido */
+        color: green;
+    }
+
+    #cpf-icon.invalid {
+        display: inline; /* Exibido se inválido */
+        color: red;
+    }
+
+    #cpf-icon.registered {
+        display: inline; /* Exibido se já cadastrado */
+        color: blue;
+    }
+    /* Ícone ao lado do input */
+    #cpf-icon {
+        font-size: 1.5em;  /* Tamanho do ícone */
+        color: gray;       /* Cor padrão do ícone */
+        margin-left: 10px; /* Espaçamento entre o input e o ícone */
+    }
+
+    /* Mensagem abaixo do campo CPF */
+    #message_cpf {
+        font-size: 14px;   /* Tamanho menor para o texto */
+        color: gray;       /* Cor padrão para o texto */
+        text-align: left;  /* Alinha o texto à esquerda */
+        margin-top: 5px;   /* Espaçamento entre o campo e o texto */
     }
 
 
@@ -217,68 +245,89 @@ async function buscarEndereco(cep) {
 
 // Função de validação do CPF
 async function validarCPF(cpf) {
-    if (cpf == "" ){
-        temCadastro1.style.display = 'none';
-        document.getElementById('message_cpf').innerText = ''
-    }
+    const cpfInput = document.getElementById('cpf');
+    const iconSpan = document.getElementById('cpf-icon');
+    const messageDiv = document.getElementById('message_cpf');
+    const temCadastroRow = document.getElementById('temCadastro1');
+
+    // Função auxiliar para atualizar o estado visual
+    const atualizarEstado = (classe, icone, mensagem = "", mostrarIcone = true) => {
+        cpfInput.classList.remove('valid', 'invalid', 'registered');
+        iconSpan.classList.remove('valid', 'invalid', 'registered');
+        cpfInput.classList.add(classe);
+        iconSpan.classList.add(classe);
+        iconSpan.style.display = mostrarIcone ? "inline" : "none";
+        iconSpan.innerHTML = icone;
+        messageDiv.innerText = mensagem;
+        messageDiv.style.color = classe === "valid" ? "green" : classe === "invalid" ? "red" : "blue";
+    };
+
+    // Limpar estado inicial
     cpf = cpf.replace(/[^\d]+/g, ''); // Remove caracteres não numéricos
-    cpf_formatado = cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    messageDiv.innerText = '';
+    iconSpan.style.display = "none";
+    temCadastroRow.style.display = 'none';
+
+    if (!cpf) {
+        atualizarEstado('', '', '', false);
+        return false;
+    }
+
+    // Validação local do CPF
+    if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) {
+        atualizarEstado("invalid", '<i class="fas fa-times-circle"></i>', "CPF inválido.");
+        return false;
+    }
+
+    // Validar dígitos verificadores
+    const validarDigito = (pesos) => {
+        const soma = cpf
+            .slice(0, pesos.length)
+            .split('')
+            .reduce((acc, num, idx) => acc + parseInt(num) * pesos[idx], 0);
+
+        let resto = (soma * 10) % 11;
+        return resto === 10 ? 0 : resto;
+    };
+
+    if (validarDigito([10, 9, 8, 7, 6, 5, 4, 3, 2]) !== parseInt(cpf.charAt(9)) ||
+        validarDigito([11, 10, 9, 8, 7, 6, 5, 4, 3, 2]) !== parseInt(cpf.charAt(10))) {
+        atualizarEstado("invalid", '<i class="fas fa-times-circle"></i>', "CPF inválido.");
+        return false;
+    }
+
+    // CPF válido localmente
+    atualizarEstado("valid", '<i class="fas fa-check-circle"></i>', "CPF válido. Verificando no servidor...");
+
+    // Formatar CPF para exibição no request
+    const cpfFormatado = cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
     const url = 'https://webhookn8nv2.mychat.solutions/webhook/login-vendas-automaticas';
 
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({"requisição": "check_cpf",
-                "cnpj_cpf": cpf_formatado})
-     });
+    // Verificar com o servidor
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ requisição: "check_cpf", cnpj_cpf: cpfFormatado }),
+        });
 
-    const dados_cpf = await response.text();
-    if (dados_cpf != "Sem cadastro" ){
-        document.getElementById('message_cpf').innerText = dados_cpf
-        temCadastro1.style.display = 'table-row';
-    }else{
-        document.getElementById('message_cpf').innerText = ''
-        temCadastro1.style.display = 'none'; 
-    }
-    
+        const resultado = await response.text();
 
-    // alert(dados_cpf);
-
-
-
-    if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) {
-        alert("CPF inválido!");
+        if (resultado !== "Sem cadastro") {
+            atualizarEstado("registered", '<i class="fas fa-info-circle"></i>', resultado);
+            temCadastroRow.style.display = 'table-row';
+        } else {
+            atualizarEstado("valid", '<i class="fas fa-check-circle"></i>', "CPF válido e disponível para cadastro.");
+        }
+    } catch (error) {
+        console.error("Erro na requisição:", error);
+        atualizarEstado("invalid", '<i class="fas fa-times-circle"></i>', "Erro ao verificar o CPF.", true);
         return false;
     }
 
-    // Validação do primeiro dígito verificador
-    let soma = 0;
-    for (let i = 0; i < 9; i++) {
-        soma += parseInt(cpf.charAt(i)) * (10 - i);
-    }
-    let resto = (soma * 10) % 11;
-    if (resto === 10 || resto === 11) resto = 0;
-    if (resto !== parseInt(cpf.charAt(9))) {
-        alert("CPF inválido!");
-        return false;
-    }
-
-    // Validação do segundo dígito verificador
-    soma = 0;
-    for (let i = 0; i < 10; i++) {
-        soma += parseInt(cpf.charAt(i)) * (11 - i);
-    }
-    resto = (soma * 10) % 11;
-    if (resto === 10 || resto === 11) resto = 0;
-    if (resto !== parseInt(cpf.charAt(10))) {
-        alert("CPF inválido!");
-        return false;
-    }
-
-    return true; // CPF é válido
+    return true;
 }
+
 
 
 // Função de validação de Email
@@ -557,15 +606,22 @@ async function enviarFormulario(event) {
     <h1>Formulário de Vendas</h1>
     <table border="1">
         <tr><th>Nome:</th><td><input type="text" id="nome" ></td></tr>
-        <tr><th>CPF:</th><td><input type="text" id="cpf"  onchange="validarCPF(this.value)">
-            <div id="message_cpf" class="message"></div></td></tr>
+        <tr>
+            <th>CPF:</th>
+            <td style="position: relative; display: flex; flex-direction: column;">
+                <div style="display: flex; align-items: center;">
+                    <input type="text" id="cpf" onchange="validarCPF(this.value)" style="flex: 1; margin-right: 10px;">
+                    <span id="cpf-icon" style="font-size: 1.2em;"></span>
+                </div>
+                <div id="message_cpf" class="message" style="margin-top: 5px;"></div>
+            </td>
+        </tr>        
         <tr id="temCadastro1" style="display: none;"><th>Segundo contrato?:</th><td id="temCadastro" style="text-align: center;">
-            <label><input type="radio" id="N" name="temCadastro" value="N" > Não</label>
-            <label><input type="radio" id="S" name="temCadastro" value="S" > Sim</label>
+            <label><input type="checkbox" id="S" name="temCadastro" value="S" checked> Sim</label>
         </td></tr>
         <tr><th>RG:</th><td><input type="text" id="rg" ></td></tr>
         <tr><th>Data de Nascimento:</th><td><input type="date" id="dataNascimento" ></td></tr>
-        <tr><th colspan="2"><button type="button" id="ARCA" onclick="alert('Botão ARCA clicado!')">Consulta SCPC e Serasa</button></td></tr>
+        <tr><th colspan="2" style="text-align: center;"><button type="button" id="ARCA" onclick="alert('Botão ARCA clicado!')">Consulta SCPC e Serasa</button></td></tr>
         <tr><th>Resultado Consulta:</th><td><div id="restricaoInfo"></div></td></tr>
         <tr><th>Celular:</th><td><input type="text" id="celular"  onchange="validarCelular(this.value)"></td></tr>
         <tr><th>WhatsApp:</th><td><input type="text" id="whatsapp"  onchange="validarCelular(this.value)"></td></tr>
@@ -709,9 +765,9 @@ async function enviarFormulario(event) {
         </tr>
         <tr><th>Vencimento:</th><td><select id="vencimento" >
             <option value="" disabled selected>Selecione um dia para vencimento</option>
-            <option>34 - Dia 7</option>
-            <option>10 - Dia 10</option>
-            <option>36 - Dia 15</option>
+            <option value="34">Dia 7</option>
+            <option value="10">Dia 10</option>
+            <option value="36">Dia 15</option>
         </select></td></tr>
         <tr><th>Taxa de Instalação:</th><td><input type="text" id="taxaInstalacao"></td></tr>
         <tr><th>Como Conheceu:</th><td><select  id="comoConheceu" >
