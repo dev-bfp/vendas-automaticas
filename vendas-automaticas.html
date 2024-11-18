@@ -169,7 +169,6 @@
     }
 
 
-
 </style>
 <script>
 
@@ -195,9 +194,9 @@ window.addEventListener("beforeunload", (event) => {
 });
 
 // Ao recarregar a página, reativa a sessão
-window.addEventListener("load", () => {
-    sessionStorage.setItem('sessaoAtiva', "true");
-});
+// window.addEventListener("load", () => {
+//     sessionStorage.setItem('sessaoAtiva', "true");
+// });
 
 
 // Função para buscar endereço via API do ViaCEP
@@ -218,7 +217,10 @@ async function buscarEndereco(cep) {
 
 // Função de validação do CPF
 async function validarCPF(cpf) {
-    alert(cpf)
+    if (cpf == "" ){
+        
+        document.getElementById('message_cpf').innerText = ''
+    }
     cpf = cpf.replace(/[^\d]+/g, ''); // Remove caracteres não numéricos
     cpf_formatado = cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
     const url = 'https://webhookn8nv2.mychat.solutions/webhook/login-vendas-automaticas';
@@ -235,11 +237,12 @@ async function validarCPF(cpf) {
     const dados_cpf = await response.text();
     if (dados_cpf != "Sem cadastro" ){
         document.getElementById('message_cpf').innerText = dados_cpf
-        temCadastro.style.display = 'table-row';
-    }
-    if (cpf == "" ){
+        temCadastro1.style.display = 'table-row';
+    }else{
         document.getElementById('message_cpf').innerText = ''
+        temCadastro1.style.display = 'none'; 
     }
+    
 
     // alert(dados_cpf);
 
