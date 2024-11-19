@@ -206,6 +206,34 @@
         margin-left: 10px; /* Espaçamento entre o input e o ícone */
     }
 
+    
+
+    #cnpj-icon {
+        color: green; /* Cor padrão para o ícone de sucesso */
+        display: none; /* Inicialmente oculto */
+    }
+
+    #cnpj-icon.valid {
+        display: inline; /* Exibido se válido */
+        color: green;
+    }
+
+    #cnpj-icon.invalid {
+        display: inline; /* Exibido se inválido */
+        color: red;
+    }
+
+    #cnpj-icon.registered {
+        display: inline; /* Exibido se já cadastrado */
+        color: blue;
+    }
+    /* Ícone ao lado do input */
+    #cnpj-icon {
+        font-size: 1.5em;  /* Tamanho do ícone */
+        color: gray;       /* Cor padrão do ícone */
+        margin-left: 10px; /* Espaçamento entre o input e o ícone */
+    }
+
     /* Mensagem abaixo do campo CPF */
     #message_cpf {
         font-size: 14px;   /* Tamanho menor para o texto */
@@ -236,16 +264,8 @@
         transform: scale(1.05);
     }
 
-
-
-
 </style>
 <script>
-
-// window.addEventListener("beforeunload", () => {
-//     localStorage.setItem('loginAutorizado', "false");
-//     localStorage.removeItem('vendedores');
-// });
 
 // Salva a sessão ativa no sessionStorage quando o usuário está na página
 sessionStorage.setItem('sessaoAtiva', "true");
@@ -263,11 +283,39 @@ window.addEventListener("beforeunload", (event) => {
     }
 });
 
-// Ao recarregar a página, reativa a sessão
-// window.addEventListener("load", () => {
-//     sessionStorage.setItem('sessaoAtiva', "true");
-// });
+document.addEventListener('DOMContentLoaded', () => {
+    if (localStorage.getItem('loginAutorizado') !== "true") {
+        alert("Acesso negado. Realize o login para continuar.");
+        window.location.href = "index.html"; // Redireciona para a página de login
+    }else{
+        carregarCondominios()
+        const vendedoresSelect = document.getElementById('vendedor');
+        const vendedores = localStorage.getItem('vendedores').split(",")
+        // alert(localStorage.getItem('vendedores'));
 
+        if (vendedores && vendedores.length > 0) {
+            vendedoresSelect.innerHTML = ''; // Limpa as opções atuais
+            vendedores.forEach(vendedor => {
+                const option = document.createElement('option');
+                option.name = vendedor;
+                option.textContent = vendedor;
+                vendedoresSelect.appendChild(option);
+            });
+            const vendedor_option = document.createElement('option');
+            vendedor_option.name = "44 - Outro Vendedor";
+            vendedor_option.textContent = "44 - Outro Vendedor";
+            vendedoresSelect.appendChild(vendedor_option);
+        } else {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'Nenhum vendedor disponível, favor realize o login';
+            vendedoresSelect.appendChild(option);
+        }
+    }
+});
+
+
+// Algoritmo Arca
 function Arca(){
     cpf = document.getElementById('cpf').value;
     cpf = cpf.replace(/[^\d]+/g, ''); // Remove caracteres não numéricos
@@ -290,6 +338,7 @@ async function buscarEndereco(cep) {
     }
 }
 
+// Função que preenche a taxa de instalação com base no valor do botão
 async function preencherTaxa(valor) {
     const campoTaxa = document.getElementById('taxaInstalacao');
     if (valor == ""){
@@ -298,6 +347,7 @@ async function preencherTaxa(valor) {
     campoTaxa.value = valor.toFixed(2).replace('.', ','); // Formata o valor como "90,00"
 }
 
+// Função que abre o campo para informar o CPF de quem indicou o cliente 
 async function preencherIndiqueGanhe() {
     const comoConheceu = document.getElementById("comoConheceu").value;
     const IndiqueGanheRow = document.getElementById("IndiqueGanhe");
@@ -310,7 +360,6 @@ async function preencherIndiqueGanhe() {
         IndiqueGanheInput.value = ''; // Limpa o campo CPF
     }
 }
-
 
 // Função de validação do CPF
 async function validarCPF(cpf) {
@@ -390,7 +439,7 @@ async function validarCPF(cpf) {
         const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ requisição: "check_cpf", cnpj_cpf: cpfFormatado }),
+            body: JSON.stringify({ requisição: "check_documento", tipo_documento: "cpf", cnpj_cpf: cpfFormatado }),
         });
 
         const resultado = await response.text();
@@ -398,7 +447,7 @@ async function validarCPF(cpf) {
         if (resultado !== "Sem cadastro") {
             atualizarEstado("registered", '<i class="fas fa-info-circle"></i>', resultado);
             temCadastroRow.style.display = 'table-row';
-            temCadastroRow.
+            temCadastroRow.checked = true;
 
         } else {
             atualizarEstado("valid", '<i class="fas fa-check-circle"></i>', "CPF válido e disponível para cadastro.");
@@ -412,6 +461,110 @@ async function validarCPF(cpf) {
     return true;
 }
 
+// Função de validação do CNPJ
+async function validarCNPJ(cnpj) {
+    // Remove caracteres não numéricos
+    cnpj = cnpj.replace(/[^\d]+/g, '');
+    
+    const cnpjInput = document.getElementById('cnpj');
+    const iconSpan = document.getElementById('cnpj-icon');
+    const messageDiv = document.getElementById('message_cnpj');
+    const temCadastroRow = document.getElementById('segundoContrato');
+
+    if (!cnpj) {
+        cnpjInput.classList.remove('valid', 'invalid', 'registered');
+        iconSpan.style.display = 'none';
+        iconSpan.className = ''; // Remove todas as classes do ícone
+        iconSpan.innerHTML = ''; // Limpa o conteúdo do ícone
+        messageDiv.innerText = ''; // Limpa a mensagem
+        return false;
+    }
+    
+    // Função auxiliar para atualizar o estado visual
+    function atualizarEstado(classe, icone, mensagem = '', mostrarIcone = true) {
+        const cnpjInput = document.getElementById('cnpj');
+        const iconSpan = document.getElementById('cnpj-icon');
+        const messageDiv = document.getElementById('message_cnpj');
+
+        if (classe) {
+            cnpjInput.classList.remove('valid', 'invalid', 'registered');
+            iconSpan.classList.remove('valid', 'invalid', 'registered');
+            cnpjInput.classList.add(classe);
+            iconSpan.classList.add(classe);
+        }
+        iconSpan.style.display = mostrarIcone ? 'inline' : 'none';
+        iconSpan.innerHTML = icone;
+        messageDiv.innerText = mensagem;
+        messageDiv.style.color = classe === 'valid' ? 'green' : classe === 'invalid' ? 'red' : 'blue';
+    }
+
+    // Validações básicas
+    if (cnpj.length !== 14) {
+        atualizarEstado('invalid', '<i class="fas fa-times-circle"></i>', 'CNPJ deve ter 14 dígitos.');
+        return false;
+    }
+
+    if (/^(\d)\1+$/.test(cnpj)) {
+        atualizarEstado('invalid', '<i class="fas fa-times-circle"></i>', 'CNPJ inválido (repetição de dígitos).');
+        return false;
+    }
+
+    // Função auxiliar para calcular os dígitos verificadores
+    function calcularDigito(cnpjParcial, pesos) {
+        const soma = cnpjParcial
+            .split('')
+            .reduce((acc, num, idx) => acc + parseInt(num) * pesos[idx], 0);
+        const resto = soma % 11;
+        return resto < 2 ? 0 : 11 - resto;
+    }
+
+    // Pesos para o cálculo dos dígitos verificadores
+    const pesosPrimeiroDigito = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+    const pesosSegundoDigito = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+
+    // Cálculo do primeiro dígito verificador
+    const primeiroDigito = calcularDigito(cnpj.slice(0, 12), pesosPrimeiroDigito);
+
+    // Cálculo do segundo dígito verificador
+    const segundoDigito = calcularDigito(cnpj.slice(0, 13), pesosSegundoDigito);
+
+    // Comparação dos dígitos calculados com os fornecidos
+    if (
+        primeiroDigito !== parseInt(cnpj.charAt(12)) ||
+        segundoDigito !== parseInt(cnpj.charAt(13))
+    ) {
+        atualizarEstado('invalid', '<i class="fas fa-times-circle"></i>', 'CNPJ inválido.');
+        return false;
+    }
+
+    // CNPJ válido localmente
+    atualizarEstado('valid', '<i class="fas fa-check-circle"></i>', 'CNPJ válido. Verificando no servidor...');
+
+    // Verificação no servidor
+    const cnpjFormatado = cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+    try {
+        const response = await fetch('https://webhookn8nv2.mychat.solutions/webhook/login-vendas-automaticas', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ requisição: 'check_documento', tipo_documento: 'cnpj', cnpj_cpf: cnpjFormatado }),
+        });
+
+        const resultado = await response.text();
+
+        if (resultado !== 'Sem cadastro') {
+            atualizarEstado('registered', '<i class="fas fa-info-circle"></i>', resultado);
+            temCadastroRow.style.display = 'table-row';
+        } else {
+            atualizarEstado('valid', '<i class="fas fa-check-circle"></i>', 'CNPJ válido e disponível para cadastro.');
+        }
+    } catch (error) {
+        console.error('Erro na requisição:', error);
+        atualizarEstado('invalid', '<i class="fas fa-times-circle"></i>', 'Erro ao verificar o CNPJ no servidor.');
+        return false;
+    }
+
+    return true;
+}
 
 
 // Função de validação de Email
@@ -425,6 +578,7 @@ async function validarEmail(email) {
         return false;
     }
 }
+
 // Função de validação de celular e WhatsApp (exige 11 dígitos)
 async function validarCelular(numero) {
     numero = numero.replace("(","").replace(")","").replace("-","").replace(" ","")
@@ -439,11 +593,13 @@ async function validarCelular(numero) {
       }
 }
 
+// Função de obter o valor selecionado 
 function obterValorSelecionado(nomeCampo) {
     const elementoSelecionado = document.querySelector(`input[name="${nomeCampo}"]:checked`);
     return elementoSelecionado ? elementoSelecionado.value : null; // Retorna o valor ou null se nada estiver selecionado
 }
 
+// Função de obter os produtos selecionados e as quantidades
 function obterProdutosSelecionados() {
     const checkboxes = document.querySelectorAll('input[name="produtos[]"]:checked');
     const produtosSelecionados = {};
@@ -457,7 +613,7 @@ function obterProdutosSelecionados() {
     return produtosSelecionados;
 }
 
-
+// Funçao de busca os dados de um condomínio selecionado no servidor
 async function buscarDadosCondominio(id) {
     const condominioId = document.getElementById('condominio').value;
 
@@ -519,6 +675,7 @@ async function buscarDadosCondominio(id) {
     }
 }
 
+// Função que busca os SVA's de um plano no servidor
 async function buscarDadosPlano() {
     const planoId = document.getElementById('planos').value.split(".")[0];
     if (!planoId) return;
@@ -543,6 +700,7 @@ async function buscarDadosPlano() {
     }
 }
 
+// Função que carrega nas opções todos os condomínios do servidor
 async function carregarCondominios() {
     try {
         const response = await fetch('https://webhookn8nv2.mychat.solutions/webhook/login-vendas-automaticas', {
@@ -570,46 +728,13 @@ async function carregarCondominios() {
     }
 }
 
-
+// Função que retorna uma string vazia se o campo estiver vazio
 function getValueOrEmpty(elementId) {
     const element = document.getElementById(elementId);
     return element ? element.value || "" : ""; // Retorna o valor ou uma string vazia
 }
 
-
-
-document.addEventListener('DOMContentLoaded', () => {
-    if (localStorage.getItem('loginAutorizado') !== "true") {
-        alert("Acesso negado. Realize o login para continuar.");
-        window.location.href = "index.html"; // Redireciona para a página de login
-    }else{
-        carregarCondominios()
-        const vendedoresSelect = document.getElementById('vendedor');
-        const vendedores = localStorage.getItem('vendedores').split(",")
-        // alert(localStorage.getItem('vendedores'));
-
-        if (vendedores && vendedores.length > 0) {
-            vendedoresSelect.innerHTML = ''; // Limpa as opções atuais
-            vendedores.forEach(vendedor => {
-                const option = document.createElement('option');
-                option.name = vendedor;
-                option.textContent = vendedor;
-                vendedoresSelect.appendChild(option);
-            });
-            const vendedor_option = document.createElement('option');
-            vendedor_option.name = "44 - Outro Vendedor";
-            vendedor_option.textContent = "44 - Outro Vendedor";
-            vendedoresSelect.appendChild(vendedor_option);
-        } else {
-            const option = document.createElement('option');
-            option.value = '';
-            option.textContent = 'Nenhum vendedor disponível, favor realize o login';
-            vendedoresSelect.appendChild(option);
-        }
-    }
-});
-
-
+// Função que altera os campos para preenchimento Pessoa Fisica/Pessoa Jurídica
 function alternarTipoCliente(tipo) {
     const camposFisica = document.getElementById("camposPessoaFisica");
     const camposJuridica = document.getElementById("camposPessoaJuridica");
@@ -625,6 +750,7 @@ function alternarTipoCliente(tipo) {
     }
 }
 
+// Função que limpa todos os campos de cadastro
 function limparCampos(idGrupo) {
     const grupo = document.getElementById(idGrupo);
     const inputs = grupo.querySelectorAll("input");
@@ -652,9 +778,7 @@ function limparCampos(idGrupo) {
     }
 }
 
-
-
-// Envio do formulário e validações
+// Envio do formulário e validações para o servidor
 async function enviarFormulario(event) {
     event.preventDefault();
 
@@ -747,6 +871,10 @@ async function enviarFormulario(event) {
                 </label>
             </td>
         </tr>
+        <tr id="segundoContrato" style="display: none;"><th>Possui cadastro?:</th>
+            <td id="temCadastro" style="text-align: center;">
+            <label><input type="checkbox" id="S" name="temCadastro" value="S"> Sim</label>
+        </td></tr>
 
         <tbody id="camposPessoaFisica">
         <tr><th>Nome:</th><td><input type="text" id="nome" ></td></tr>
@@ -758,10 +886,6 @@ async function enviarFormulario(event) {
                 </div>
                 <div id="message_cpf" class="message" style="margin-top: 5px;"></div>
         </td></tr>        
-        <tr id="segundoContrato" style="display: none;"><th>Segundo contrato?:</th>
-            <td id="temCadastro" style="text-align: center;">
-            <label><input type="checkbox" id="S" name="temCadastro" value="S"> Sim</label>
-        </td></tr>
         <tr><th>RG:</th><td><input type="text" id="rg" ></td></tr>
         <tr><th>Data de Nascimento:</th><td><input type="date" id="dataNascimento" ></td></tr>
         <tr><th>Sexo:</th><td id="sexo" style="text-align: center;">
@@ -772,7 +896,14 @@ async function enviarFormulario(event) {
 
         <tbody id="camposPessoaJuridica" style="display: none;">
             <tr><th>Razão Social:</th><td><input type="text" id="razaoSocial"></td></tr>
-            <tr><th>CNPJ:</th><td><input type="text" id="cnpj" onchange="validarCNPJ(this.value)"></td></tr>
+            <tr><th>CNPJ:</th>
+                <td style="position: relative; display: flex; flex-direction: column;">
+                    <div style="display: flex; align-items: center;">
+                        <input type="text" id="cnpj" onchange="validarCNPJ(this.value)" style="flex: 1; margin-right: 10px;">
+                        <span id="cnpj-icon" style="font-size: 1.2em;"></span>
+                    </div>
+                    <div id="message_cnpj" class="message" style="margin-top: 5px;"></div>
+            </td></tr>
             <tr><th>Inscrição Estadual:</th><td><input type="text" id="inscricaoEstadual"></td></tr>
             <tr><th>Contribuinte ICMS:</th>
                 <td id="contribuinteIcms">
