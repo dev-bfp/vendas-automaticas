@@ -142,6 +142,9 @@
     </div>
 
     <script>
+        if (typeof(Storage) === "undefined") {
+        alert("Seu navegador não suporta o armazenamento local. O login não funcionará.");
+        }
         document.getElementById('loginForm').addEventListener('submit', async (event) => {
             event.preventDefault(); // Evita o envio padrão do formulário
             const button = event.target.querySelector('button');
