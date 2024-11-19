@@ -144,9 +144,15 @@
         margin-right: 0px; /* Espaço entre os checkboxes */
     }
     
-    #contribuinteIcmslabel {
-        display: inline-block;
-        margin-right: 0px; /* Espaço entre os checkboxes */
+    #contribuinteIcms label {
+        display: inline-flex; /* Alinha o checkbox e o texto na mesma linha */
+        align-items: center; /* Alinha verticalmente o texto com o checkbox */
+        margin-right: 15px; /* Espaçamento entre as opções */
+        font-family: Arial, sans-serif;
+    }
+
+    #contribuinteIcms input[type="checkbox"] {
+        margin-right: 5px; /* Espaçamento entre o checkbox e o texto */
     }
 
     #temCadastro label {
@@ -338,6 +344,7 @@ async function buscarEndereco(cep) {
     }
 }
 
+
 // Função que preenche a taxa de instalação com base no valor do botão
 async function preencherTaxa(valor) {
     const campoTaxa = document.getElementById('taxaInstalacao');
@@ -346,6 +353,7 @@ async function preencherTaxa(valor) {
     }
     campoTaxa.value = valor.toFixed(2).replace('.', ','); // Formata o valor como "90,00"
 }
+
 
 // Função que abre o campo para informar o CPF de quem indicou o cliente 
 async function preencherIndiqueGanhe() {
@@ -360,6 +368,7 @@ async function preencherIndiqueGanhe() {
         IndiqueGanheInput.value = ''; // Limpa o campo CPF
     }
 }
+
 
 // Função de validação do CPF
 async function validarCPF(cpf) {
@@ -460,6 +469,7 @@ async function validarCPF(cpf) {
 
     return true;
 }
+
 
 // Função de validação do CNPJ
 async function validarCNPJ(cnpj) {
@@ -579,6 +589,7 @@ async function validarEmail(email) {
     }
 }
 
+
 // Função de validação de celular e WhatsApp (exige 11 dígitos)
 async function validarCelular(numero) {
     numero = numero.replace("(","").replace(")","").replace("-","").replace(" ","")
@@ -593,11 +604,13 @@ async function validarCelular(numero) {
       }
 }
 
+
 // Função de obter o valor selecionado 
 function obterValorSelecionado(nomeCampo) {
     const elementoSelecionado = document.querySelector(`input[name="${nomeCampo}"]:checked`);
     return elementoSelecionado ? elementoSelecionado.value : null; // Retorna o valor ou null se nada estiver selecionado
 }
+
 
 // Função de obter os produtos selecionados e as quantidades
 function obterProdutosSelecionados() {
@@ -612,6 +625,7 @@ function obterProdutosSelecionados() {
     });
     return produtosSelecionados;
 }
+
 
 // Funçao de busca os dados de um condomínio selecionado no servidor
 async function buscarDadosCondominio(id) {
@@ -675,6 +689,7 @@ async function buscarDadosCondominio(id) {
     }
 }
 
+
 // Função que busca os SVA's de um plano no servidor
 async function buscarDadosPlano() {
     const planoId = document.getElementById('planos').value.split(".")[0];
@@ -699,6 +714,7 @@ async function buscarDadosPlano() {
         throw new Error("Erro ao buscar dados do condomínio.");
     }
 }
+
 
 // Função que carrega nas opções todos os condomínios do servidor
 async function carregarCondominios() {
@@ -728,11 +744,13 @@ async function carregarCondominios() {
     }
 }
 
+
 // Função que retorna uma string vazia se o campo estiver vazio
 function getValueOrEmpty(elementId) {
     const element = document.getElementById(elementId);
     return element ? element.value || "" : ""; // Retorna o valor ou uma string vazia
 }
+
 
 // Função que altera os campos para preenchimento Pessoa Fisica/Pessoa Jurídica
 function alternarTipoCliente(tipo) {
@@ -749,6 +767,7 @@ function alternarTipoCliente(tipo) {
         limparCampos("camposPessoaFisica");
     }
 }
+
 
 // Função que limpa todos os campos de cadastro
 function limparCampos(idGrupo) {
@@ -777,6 +796,7 @@ function limparCampos(idGrupo) {
         messageCpf.innerText = ""; // Remove texto da mensagem
     }
 }
+
 
 // Envio do formulário e validações para o servidor
 async function enviarFormulario(event) {
@@ -829,8 +849,22 @@ async function enviarFormulario(event) {
         dataInstalacao: document.getElementById('dataInstalacao').value,
         periodoInstalacao: document.getElementById('periodoInstalacao').value,
         svaInclusos: document.getElementById('planoInfo').innerText,
+        // Pessoa Jurídica
+        razaoSocial: await getValueOrEmpty('razaoSocial'),
+        cnpj: await getValueOrEmpty('cnpj'),
+        inscricaoEstadual: await getValueOrEmpty('inscricaoEstadual'),
+        contribuinteIcms: obterValorSelecionado("contribuinteIcms"),
+        representanteLegal: await getValueOrEmpty('representanteLegal'),
+        cpfRepresentanteLegal: await getValueOrEmpty('cpfRepresentanteLegal'),
+
+        // Indicação (opcional)
+        cpfIndique: await getValueOrEmpty('cpfIndique'),
+
+        // Resultado da consulta SCPC/Serasa
+        restricaoInfo: document.getElementById('restricaoInfo').innerText
 
     };
+
 
     const url = 'https://webhookn8nv2.mychat.solutions/webhook/venda-automatica';
 
@@ -906,9 +940,10 @@ async function enviarFormulario(event) {
             </td></tr>
             <tr><th>Inscrição Estadual:</th><td><input type="text" id="inscricaoEstadual"></td></tr>
             <tr><th>Contribuinte ICMS:</th>
-                <td id="contribuinteIcms">
-                    <label><input type="radio" name="contribuinteIcms" value="Sim"> Sim</label>
-                    <label><input type="radio" name="contribuinteIcms" value="Não"> Não</label>
+                <td id="contribuinteIcms" style="text-align: center;">
+                    <label><input type="radio" name="contribuinteIcms" value="S"> Sim</label>
+                    <label><input type="radio" name="contribuinteIcms" value="N"> Não</label>
+                    <label><input type="radio" name="contribuinteIcms" value="I"> Isento</label>
                 </td>
             </tr>
             <tr><th>Representante Legal:</th><td><input type="text" id="representanteLegal"></td></tr>
