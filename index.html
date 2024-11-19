@@ -1,9 +1,8 @@
 <!DOCTYPE html>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, shrink-to-fit=no, user-scalable=no">
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, shrink-to-fit=no, user-scalable=no">
     <title>AutoSell</title>
     <style>
         /* Estilos básicos e centralização */
@@ -18,7 +17,7 @@
     }
 
     .login-container {
-        width: 90%;
+        width: 100%;
         max-width: 300px;
         padding: 20px;
         border: 1px solid #ccc;
@@ -100,8 +99,9 @@
     }
 
     button.loading {
-        background-color: #1826e9;
-        cursor: not-allowed;
+    background-color: #1826e9; /* Cor diferente para indicar o estado de carregamento */
+    cursor: not-allowed; /* Cursor de espera */
+    position: relative;
     }
 
     button.loading::after {
@@ -142,8 +142,7 @@
     </div>
 
     <script>
-
-        document.getElementById('loginForm').addEventListener('submit',  async (event) => {
+        document.getElementById('loginForm').addEventListener('submit', async (event) => {
             event.preventDefault(); // Evita o envio padrão do formulário
             const button = event.target.querySelector('button');
             const messageDiv = document.getElementById('message');
@@ -156,23 +155,16 @@
                 const username = document.getElementById('username').value;
                 const password = document.getElementById('password').value;
                 // Envia a requisição para o webhook
-                const response = await (url, {
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ 
-                        requisição: 'login', 
-                        username: username.trim(), 
-                        password: password.trim() 
-                    })
+                    body: JSON.stringify({ requisição: 'login', id_condominio: '1', username, password })
                 });
-                // alert("Status da resposta:", response.status);
-                // alert("Cabeçalhos:", response.headers);
 
                 // Processa a resposta do webhook
                 const result = await response.json();
-                alert(result.message)
                 // alert(result[0].vendedores['vendedor'])
 
                 // Verifica o status do acesso
