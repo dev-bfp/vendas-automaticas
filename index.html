@@ -168,10 +168,14 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ requisição: 'login', username, password })
+                    body: JSON.stringify({ 
+                        requisição: 'login', 
+                        username: username.trim(), 
+                        password: password.trim() 
+                    })
                 });
-                alert("Status da resposta:", response.status);
-                alert("Cabeçalhos:", response.headers);
+                // alert("Status da resposta:", response.status);
+                // alert("Cabeçalhos:", response.headers);
 
                 // Processa a resposta do webhook
                 const result = await response.json();
