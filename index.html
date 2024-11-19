@@ -142,9 +142,14 @@
     </div>
 
     <script>
-        if (typeof(Storage) === "undefined") {
-        alert("Seu navegador não suporta o armazenamento local. O login não funcionará.");
+       try {
+        if (typeof localStorage === "undefined") {
+            throw new Error("localStorage não suportado.");
         }
+        } catch (error) {
+            alert("Seu navegador não suporta o armazenamento local. Algumas funcionalidades podem não funcionar.");
+        }
+
         document.getElementById('loginForm').addEventListener('submit', async (event) => {
             event.preventDefault(); // Evita o envio padrão do formulário
             const button = event.target.querySelector('button');
@@ -165,6 +170,8 @@
                     },
                     body: JSON.stringify({ requisição: 'login', username, password })
                 });
+                alert("Status da resposta:", response.status);
+                alert("Cabeçalhos:", response.headers);
 
                 // Processa a resposta do webhook
                 const result = await response.json();
