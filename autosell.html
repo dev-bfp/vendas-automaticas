@@ -59,17 +59,7 @@
         border: 1px solid #000000;
         
     }
-    /* Responsividade */
-    @media (max-width: 600px) {
-    #planoInfo {
-        font-size: 12px; /* Ajuste o tamanho da fonte para telas menores */
-        padding: 5px; /* Reduza o padding se necessário */
-    }
-    #produtos{
-        margin-right: 1px; /* Espaçamento entre o checkbox e o texto */
-        width: 10%;
-    }
-    }
+
     /* Estilização do botão Enviar */
     button {
         width: 80%;
@@ -273,6 +263,43 @@
         background-color: #000000;
         transform: scale(1.05);
     }
+
+
+
+    /* Responsividade */
+    @media (max-width: 600px) {
+    #planoInfo {
+        font-size: 12px; /* Ajuste o tamanho da fonte para telas menores */
+        padding: 5px; /* Reduza o padding se necessário */
+    }
+    #produtos{
+        margin-right: 1px; /* Espaçamento entre o checkbox e o texto */
+        width: 10%;
+    }
+    .produtos {
+        flex-direction: column; /* Alinhar os itens verticalmente */
+        gap: 5px; /* Reduz o espaçamento entre os elementos */
+    }
+
+    .produtos label {
+        display: flex;
+        align-items: center; /* Alinha verticalmente o texto e o checkbox */
+        justify-content: flex-start; /* Alinha horizontalmente os itens */
+        width: 100%; /* Garante que o label ocupe toda a largura disponível */
+    }
+
+    .produtos input[type="checkbox"] {
+        margin-right: 10px; /* Adiciona espaço entre o checkbox e o texto */
+        width: auto; /* Remove tamanho fixo */
+    }
+
+    .produtos input[type="number"] {
+        width: 50%; /* Ajuste o tamanho no mobile */
+        margin-left: 10px; /* Adiciona espaçamento em relação ao texto */
+    }
+    }
+
+
 
 </style>
 <script>
