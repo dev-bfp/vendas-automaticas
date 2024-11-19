@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<meta name="viewport">
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -17,7 +18,7 @@
     }
 
     .login-container {
-        width: 100%;
+        width: 90%;
         max-width: 300px;
         padding: 20px;
         border: 1px solid #ccc;
@@ -99,9 +100,8 @@
     }
 
     button.loading {
-    background-color: #1826e9; /* Cor diferente para indicar o estado de carregamento */
-    cursor: not-allowed; /* Cursor de espera */
-    position: relative;
+        background-color: #1826e9;
+        cursor: not-allowed;
     }
 
     button.loading::after {
@@ -163,7 +163,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ requisição: 'login', id_condominio: '1', username, password })
+                    body: JSON.stringify({ requisição: 'login', username, password })
                 });
 
                 // Processa a resposta do webhook
