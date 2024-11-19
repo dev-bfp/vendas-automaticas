@@ -46,7 +46,7 @@
         margin-top: 5px;    
     }
     th {
-        width: 20%;
+        width: 25%;
         border: none;
         vertical-align: center;
         border-radius: 10px;
@@ -148,23 +148,30 @@
         margin-right: 0px; /* Espaço entre os checkboxes */
     }
 
-    #ARCA {
+    #arca {
         display: block;           /* Garante que o botão se comporte como um bloco */
         width: auto;              /* Ajuste automático do tamanho ao conteúdo */
         padding: 8px 16px;        /* Menor preenchimento */
         font-size: 14px;          /* Reduz o tamanho da fonte */
         margin: 0px auto;        /* Centraliza horizontalmente dentro do elemento pai */
     }
-
-
     /* Efeito ao passar o mouse sobre o botão */
     #ARCA:hover {
         background-color: #45a049; /* Cor do botão quando hover */
     }
 
+    #restricaoInfo {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        padding: 10px;
+        background-color: #eeeeee;
+        border-radius: 5px;
+        text-align: center;
+    }
+
     #cpf-icon {
-    color: green; /* Cor padrão para o ícone de sucesso */
-    display: none; /* Inicialmente oculto */
+        color: green; /* Cor padrão para o ícone de sucesso */
+        display: none; /* Inicialmente oculto */
     }
 
     #cpf-icon.valid {
@@ -196,6 +203,30 @@
         margin-top: 5px;   /* Espaçamento entre o campo e o texto */
     }
 
+    .btn-taxa {
+        width: auto; /* Ajusta o tamanho dos botões ao conteúdo */
+        display: inline-block; /* Permite múltiplos botões lado a lado */
+        padding: 8px 16px; /* Aumenta a área clicável */
+        margin: 0 5px; /* Adiciona espaçamento horizontal entre os botões */
+        font-size: 14px; /* Mantém o texto legível */
+        border: none;
+        border-radius: 5px;
+        background-color: #07d870;
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.2s;
+        vertical-align: center;
+        flex-wrap: wrap;
+        margin-top: 5px;
+    }
+
+    .btn-taxa:hover {
+        background-color: #000000;
+        transform: scale(1.05);
+    }
+
+
+
 
 </style>
 <script>
@@ -226,6 +257,11 @@ window.addEventListener("beforeunload", (event) => {
 //     sessionStorage.setItem('sessaoAtiva', "true");
 // });
 
+function Arca(){
+    cpf = document.getElementById('cpf').value;
+    cpf = cpf.replace(/[^\d]+/g, ''); // Remove caracteres não numéricos
+    alert(cpf);
+}
 
 // Função para buscar endereço via API do ViaCEP
 async function buscarEndereco(cep) {
@@ -243,19 +279,43 @@ async function buscarEndereco(cep) {
     }
 }
 
+async function preencherTaxa(valor) {
+    const campoTaxa = document.getElementById('taxaInstalacao');
+    if (valor == ""){
+        campoTaxa.value = "";
+    }
+    campoTaxa.value = valor.toFixed(2).replace('.', ','); // Formata o valor como "90,00"
+}
+
+async function preencherIndiqueGanhe() {
+    const comoConheceu = document.getElementById("comoConheceu").value;
+    const IndiqueGanheRow = document.getElementById("IndiqueGanhe");
+    const IndiqueGanheInput = IndiqueGanheRow.querySelector('input');
+
+    if (comoConheceu == 4) {
+        IndiqueGanheRow.style.display = 'table-row';
+    } else {
+        IndiqueGanheRow.style.display = 'none';
+        IndiqueGanheInput.value = ''; // Limpa o campo CPF
+    }
+}
+
+
 // Função de validação do CPF
 async function validarCPF(cpf) {
     const cpfInput = document.getElementById('cpf');
     const iconSpan = document.getElementById('cpf-icon');
     const messageDiv = document.getElementById('message_cpf');
-    const temCadastroRow = document.getElementById('temCadastro1');
+    const temCadastroRow = document.getElementById('segundoContrato');
 
     // Função auxiliar para atualizar o estado visual
     const atualizarEstado = (classe, icone, mensagem = "", mostrarIcone = true) => {
-        cpfInput.classList.remove('valid', 'invalid', 'registered');
-        iconSpan.classList.remove('valid', 'invalid', 'registered');
-        cpfInput.classList.add(classe);
-        iconSpan.classList.add(classe);
+        if (classe) {
+            cpfInput.classList.remove('valid', 'invalid', 'registered');
+            iconSpan.classList.remove('valid', 'invalid', 'registered');
+            cpfInput.classList.add(classe);
+            iconSpan.classList.add(classe);
+        }
         iconSpan.style.display = mostrarIcone ? "inline" : "none";
         iconSpan.innerHTML = icone;
         messageDiv.innerText = mensagem;
@@ -451,7 +511,7 @@ async function buscarDadosPlano() {
      });
 
     const dados_plano = await response.text();
-    console.log(dados_plano)
+    // console.log(dados_plano)
     document.getElementById('planoInfo').innerText = dados_plano || ''
     // Verifica se a resposta foi bem-sucedida
     if (!response.ok) {
@@ -536,6 +596,7 @@ async function enviarFormulario(event) {
     const celular = document.getElementById('celular').value;
     const whatsapp = document.getElementById('whatsapp').value;
     const sexo = obterValorSelecionado("sexo");
+    const moradia = obterValorSelecionado("moradia");
 
     if (!validarCPF(cpf)) return alert('CPF inválido!');
     if (!validarEmail(email)) return alert('E-mail inválido!');
@@ -545,12 +606,14 @@ async function enviarFormulario(event) {
         nome: document.getElementById('nome').value,
         sexo,
         cpf,
+        segundo_contrato: obterValorSelecionado("temCadastro"),
         rg: await getValueOrEmpty('rg'),
         dataNascimento: document.getElementById('dataNascimento').value,
         celular,
         whatsapp,
         email,
         condominio: document.getElementById('condominio').value,
+        id_condominio: document.getElementById('condominio').value.split(" - ")[0],
         cep: document.getElementById('cep').value,
         endereco: document.getElementById('endereco').value,
         numero: document.getElementById('numero').value,
@@ -559,9 +622,12 @@ async function enviarFormulario(event) {
         complemento: await getValueOrEmpty('complemento'),
         bloco: await getValueOrEmpty('bloco'),
         apartamento: await getValueOrEmpty('apartamento'),
-        moradia: document.getElementById('moradia').value,
+        moradia,
         vendedor: document.getElementById('vendedor').value,
-        planos: document.getElementById('planos').value,
+        id_vendedor: document.getElementById('vendedor').value.split(" - ")[0],
+        plano: document.getElementById('planos').value,
+        id_plano: document.getElementById('planos').value.split(" - ")[0].split(".")[0],
+        id_velocidade: document.getElementById('planos').value.split(" - ")[0].split(".")[1],
         produtosAdicionais: obterProdutosSelecionados(),
         vencimento: document.getElementById('vencimento').value,
         taxaInstalacao: document.getElementById('taxaInstalacao').value,
@@ -606,22 +672,21 @@ async function enviarFormulario(event) {
     <h1>Formulário de Vendas</h1>
     <table border="1">
         <tr><th>Nome:</th><td><input type="text" id="nome" ></td></tr>
-        <tr>
-            <th>CPF:</th>
+        <tr><th>CPF:</th>
             <td style="position: relative; display: flex; flex-direction: column;">
                 <div style="display: flex; align-items: center;">
                     <input type="text" id="cpf" onchange="validarCPF(this.value)" style="flex: 1; margin-right: 10px;">
                     <span id="cpf-icon" style="font-size: 1.2em;"></span>
                 </div>
                 <div id="message_cpf" class="message" style="margin-top: 5px;"></div>
-            </td>
-        </tr>        
-        <tr id="temCadastro1" style="display: none;"><th>Segundo contrato?:</th><td id="temCadastro" style="text-align: center;">
+        </td></tr>        
+        <tr id="segundoContrato" style="display: none;"><th>Segundo contrato?:</th>
+            <td id="temCadastro" style="text-align: center;">
             <label><input type="checkbox" id="S" name="temCadastro" value="S" checked> Sim</label>
         </td></tr>
         <tr><th>RG:</th><td><input type="text" id="rg" ></td></tr>
         <tr><th>Data de Nascimento:</th><td><input type="date" id="dataNascimento" ></td></tr>
-        <tr><th colspan="2" style="text-align: center;"><button type="button" id="ARCA" onclick="alert('Botão ARCA clicado!')">Consulta SCPC e Serasa</button></td></tr>
+        <tr><th colspan="2" style="text-align: center;"><button type="button" id="arca" onclick="Arca()">Consulta SCPC e Serasa</button></td></tr>
         <tr><th>Resultado Consulta:</th><td><div id="restricaoInfo"></div></td></tr>
         <tr><th>Celular:</th><td><input type="text" id="celular"  onchange="validarCelular(this.value)"></td></tr>
         <tr><th>WhatsApp:</th><td><input type="text" id="whatsapp"  onchange="validarCelular(this.value)"></td></tr>
@@ -645,39 +710,13 @@ async function enviarFormulario(event) {
         <tr id="linhaBloco" style="display: none;";><th>Bloco:</th><td><input type="text" id="bloco"></td></tr>
         <tr id="linhaApartamento" style="display: none;"><th>Apartamento:</th><td><input type="text" id="apartamento"></td></tr>
         <tr><th>Moradia:</th><td id="moradia" style="text-align: center;">
-            <label><input type="radio" id="casaPropria" name="casaPropria"> Casa Propria</label>
-            <label><input type="radio" id="casaAlugada" name="casaAlugada"> Casa Alugada</label>
+            <label><input type="radio" id="P" name="moradia" value="P"> Casa Propria</label>
+            <label><input type="radio" id="A" name="moradia" value="A"> Casa Alugada</label>
         </td></tr>
     </table>
     <table>
         <tr><th>Vendedor:</th><td><select id="vendedor" > 
             <option value="" disabled selected>Selecione o vendedor</option>
-            <!-- <option>13 - Roberto Senegal - PAP</option>
-            <option>48 - Tâmara Cunha - PAP</option>
-            <option>73 - Natalia Pereira - PAP</option>
-            <option>46 - Elen Barreto - PAP</option>
-            <option>76 - Lorrayna Ferreira - PAP</option>
-            <option>79 - Daniel Barbosa - PAP</option>
-            <option>78 - Rebeca Duarte - PAP</option>
-            <option>47 - Tâmara Cunha - Interno</option>
-            <option>45 - Elen Barreto - Interno</option>
-            <option>75 - Lorrayna Ferreira - Interno</option>
-            <option>50 - Lucas Moraes - Interno</option>
-            <option>17 - Brian Pereira - Interno</option>
-            <option>36 - Renan Silva - Interno</option>
-            <option>18 - Leandra Ferreira - Interno</option>
-            <option>78 - Sarah Stephany - Interno</option>
-            <option>70 - Lucas NOC - Interno</option>
-            <option>80 - Rebeca Duarte - Interno</option>
-            <option>21 - Antônio Barros - Técnico</option>
-            <option>22 - Felipe Silva - Técnico</option>
-            <option>26 - Francisco Lima - Técnico</option>
-            <option>51 - João Paulo - Técnico</option>
-            <option>52 - Alex Batista - Técnico</option>
-            <option>54 - Alecsandro Ferreira - Técnico</option>
-            <option>55 - Rodrigo Fernandes - Técnico</option>
-            <option>56 - Nickson Santos - Técnico</option>
-            <option>44 - Outro vendedor - Interno</option> -->
         </select></td></tr>
         <tr><th>Planos:</th><td><select id="planos" onchange="buscarDadosPlano(this.value)" >
             <option value="" disabled selected>Selecione um plano</option>
@@ -769,22 +808,39 @@ async function enviarFormulario(event) {
             <option value="10">Dia 10</option>
             <option value="36">Dia 15</option>
         </select></td></tr>
-        <tr><th>Taxa de Instalação:</th><td><input type="text" id="taxaInstalacao"></td></tr>
-        <tr><th>Como Conheceu:</th><td><select  id="comoConheceu" >
+        <tr>
+            <th>Taxa de Instalação:</th>
+            <td>
+                <input type="text" id="taxaInstalacao">
+                <div style="margin-top: 10px; text-align: center;">
+                    <button type="button" class="btn-taxa" onclick="preencherTaxa(0)">Isento</button>
+                    <button type="button" class="btn-taxa" onclick="preencherTaxa(90)">90,00</button>
+                    <button type="button" class="btn-taxa" onclick="preencherTaxa(100)">100,00</button>
+                    <button type="button" class="btn-taxa" onclick="preencherTaxa(120)">120,00</button>
+                    <button type="button" class="btn-taxa" onclick="preencherTaxa('')">Outro valor</button>
+                </div>
+            </td>
+        </tr>
+        <tr><th>Como Conheceu:</th><td><select  id="comoConheceu" onchange="preencherIndiqueGanhe(this.value)">
             <option value="" disabled selected>Selecione como o cliente conheceu a empresa</option>
-            <option>SONDAGEM</option>
-            <option>PANFLETO</option>
-            <option>LOJA</option>
-            <option>REDE SOCIAIS</option>
-            <option>GOOGLE</option>
-            <option>INDICAÇÃO</option>
-            <option>OUTDOOR</option>
-            <option>CARRO DA EMPRESA</option>
-            <option>CARRO DE SOM</option>
-            <option>CTO NO POSTE</option>
-            <option>JÁ É CLIENTE</option>
-            <option>OUTROS (ESPECIFICAR NA OBSERVAÇÃO)</option>
+            <option id="Sondagem" value="6">Sondagem</option>
+            <option id="Panfletagem" value="10">Panfletagem</option>
+            <option id="Outdoor" value="14">Outdoor</option>
+            <option id="Loja" value="12">Loja</option>
+            <option id="Já é cliente" value="1">Já é cliente</option>
+            <option id="Instagram" value="13">Instagram</option>
+            <option id="Indicação de outros clientes" value="4">Indicação de outros clientes</option>
+            <option id="Google" value="2">Google</option>
+            <option id="Feiras" value="7">Feiras</option>
+            <option id="Facebook" value="3">Facebook</option>
+            <option id="CTO no poste" value="17">CTO no poste</option>
+            <option id="Carro de som" value="16">Carro de som</option>
+            <option id="Carro da empresa" value="15">Carro da empresa</option>
+            <option id="Outros (Especificar na Observação)" value="8">Outros (Especificar na Observação)</option>
         </select></td></tr>
+        </td><tr id="IndiqueGanhe" style="display: none;";><th>Insira o CPF do cliente que indicou:</th><td>
+            <input type="text" id="cpfIndique">
+        </td></tr>
         <tr><th>Profissão:</th><td><input type="text" id="profissao"></td></tr>
         <tr><th>Antigo provedor:</th><td><input type="text" id="concorrente"></td></tr>
         <tr><th>Observação:</th><td><textarea id="observacao"></textarea></td></tr>
