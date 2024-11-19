@@ -142,13 +142,6 @@
     </div>
 
     <script>
-       try {
-        if (typeof localStorage === "undefined") {
-            throw new Error("localStorage não suportado.");
-        }
-        } catch (error) {
-            alert("Seu navegador não suporta o armazenamento local. Algumas funcionalidades podem não funcionar.");
-        }
 
         document.getElementById('loginForm').addEventListener('submit', async (event) => {
             event.preventDefault(); // Evita o envio padrão do formulário
@@ -179,6 +172,7 @@
 
                 // Processa a resposta do webhook
                 const result = await response.json();
+                alert(result.message)
                 // alert(result[0].vendedores['vendedor'])
 
                 // Verifica o status do acesso
