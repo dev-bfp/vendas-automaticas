@@ -111,7 +111,7 @@
     .produtos label {
         display: flex;
         align-items: center; /* Alinha o checkbox à esquerda e o texto à direita */
-        width: 60%; /* Ajuste para 2 colunas (50% com o espaço entre os itens) */
+        width: 80%; /* Ajuste para 2 colunas (50% com o espaço entre os itens) */
     }
 
     .produtos input[type="checkbox"] {
@@ -135,13 +135,23 @@
     }
     
     #sexo label {
-    display: inline-block;
-    margin-right: 0px; /* Espaço entre os checkboxes */
+        display: inline-block;
+        margin-right: 0px; /* Espaço entre os checkboxes */
+    }
+
+    #tipoCliente label {
+        display: inline-block;
+        margin-right: 0px; /* Espaço entre os checkboxes */
+    }
+    
+    #contribuinteIcmslabel {
+        display: inline-block;
+        margin-right: 0px; /* Espaço entre os checkboxes */
     }
 
     #temCadastro label {
-    display: inline-block;
-    margin-right: 0px; /* Espaço entre os checkboxes */
+        display: inline-block;
+        margin-right: 0px; /* Espaço entre os checkboxes */
     }
 
     #moradia label {
@@ -309,6 +319,14 @@ async function validarCPF(cpf) {
     const messageDiv = document.getElementById('message_cpf');
     const temCadastroRow = document.getElementById('segundoContrato');
 
+    if (cpfInput == ""){
+        iconSpan == '';
+        messageDiv == '';
+        temCadastroRow == '';
+        cpfInput.classList.remove('valid', 'invalid', 'registered');
+        iconSpan.classList.remove('valid', 'invalid', 'registered');
+    }
+
     // Função auxiliar para atualizar o estado visual
     const atualizarEstado = (classe, icone, mensagem = "", mostrarIcone = true) => {
         if (classe) {
@@ -331,6 +349,9 @@ async function validarCPF(cpf) {
 
     if (!cpf) {
         atualizarEstado('', '', '', false);
+        messageDiv.innerText = '';
+        iconSpan.style.display = "none";
+        temCadastroRow.style.display = 'none';
         return false;
     }
 
@@ -377,6 +398,8 @@ async function validarCPF(cpf) {
         if (resultado !== "Sem cadastro") {
             atualizarEstado("registered", '<i class="fas fa-info-circle"></i>', resultado);
             temCadastroRow.style.display = 'table-row';
+            temCadastroRow.
+
         } else {
             atualizarEstado("valid", '<i class="fas fa-check-circle"></i>', "CPF válido e disponível para cadastro.");
         }
@@ -587,6 +610,49 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
+function alternarTipoCliente(tipo) {
+    const camposFisica = document.getElementById("camposPessoaFisica");
+    const camposJuridica = document.getElementById("camposPessoaJuridica");
+
+    if (tipo === "F") {
+        camposFisica.style.display = "table-row-group";
+        camposJuridica.style.display = "none";
+        limparCampos("camposPessoaJuridica");
+    } else if (tipo === "J") {
+        camposFisica.style.display = "none";
+        camposJuridica.style.display = "table-row-group";
+        limparCampos("camposPessoaFisica");
+    }
+}
+
+function limparCampos(idGrupo) {
+    const grupo = document.getElementById(idGrupo);
+    const inputs = grupo.querySelectorAll("input");
+    const cpfIcon = document.getElementById("cpf-icon");
+    const messageCpf = document.getElementById("message_cpf");
+    const temCadastroRow = document.getElementById('segundoContrato');
+
+    temCadastroRow.style.display = 'none'
+
+    // Limpa todos os inputs
+    inputs.forEach(input => {
+        input.value = "";
+        input.checked = false; // Reseta checkboxes e radios, se houver
+    });
+
+    // Limpa os elementos específicos do CPF
+    if (cpfIcon) {
+        cpfIcon.style.display = "none";
+        cpfIcon.className = ""; // Remove classes
+        cpfIcon.innerHTML = ""; // Remove conteúdo do ícone
+    }
+
+    if (messageCpf) {
+        messageCpf.innerText = ""; // Remove texto da mensagem
+    }
+}
+
+
 
 // Envio do formulário e validações
 async function enviarFormulario(event) {
@@ -672,6 +738,17 @@ async function enviarFormulario(event) {
 <form id="formVendas" onsubmit="enviarFormulario(event)">
     <h1>Formulário de Vendas</h1>
     <table border="1">
+        <tr><th></th><td id="tipoCliente" style="text-align: center;">
+                <label>
+                    <input type="radio" name="tipoCliente" value="F" onclick="alternarTipoCliente(this.value)" checked> Pessoa Física
+                </label>
+                <label>
+                    <input type="radio" name="tipoCliente" value="J" onclick="alternarTipoCliente(this.value)"> Pessoa Jurídica
+                </label>
+            </td>
+        </tr>
+
+        <tbody id="camposPessoaFisica">
         <tr><th>Nome:</th><td><input type="text" id="nome" ></td></tr>
         <tr><th>CPF:</th>
             <td style="position: relative; display: flex; flex-direction: column;">
@@ -683,19 +760,36 @@ async function enviarFormulario(event) {
         </td></tr>        
         <tr id="segundoContrato" style="display: none;"><th>Segundo contrato?:</th>
             <td id="temCadastro" style="text-align: center;">
-            <label><input type="checkbox" id="S" name="temCadastro" value="S" checked> Sim</label>
+            <label><input type="checkbox" id="S" name="temCadastro" value="S"> Sim</label>
         </td></tr>
         <tr><th>RG:</th><td><input type="text" id="rg" ></td></tr>
         <tr><th>Data de Nascimento:</th><td><input type="date" id="dataNascimento" ></td></tr>
+        <tr><th>Sexo:</th><td id="sexo" style="text-align: center;">
+            <label><input type="radio" id="M" name="sexo" value="M"> Masculino</label>
+            <label><input type="radio" id="F" name="sexo" value="F"> Feminino</label>
+        </td></tr>
+        </tbody>
+
+        <tbody id="camposPessoaJuridica" style="display: none;">
+            <tr><th>Razão Social:</th><td><input type="text" id="razaoSocial"></td></tr>
+            <tr><th>CNPJ:</th><td><input type="text" id="cnpj" onchange="validarCNPJ(this.value)"></td></tr>
+            <tr><th>Inscrição Estadual:</th><td><input type="text" id="inscricaoEstadual"></td></tr>
+            <tr><th>Contribuinte ICMS:</th>
+                <td id="contribuinteIcms">
+                    <label><input type="radio" name="contribuinteIcms" value="Sim"> Sim</label>
+                    <label><input type="radio" name="contribuinteIcms" value="Não"> Não</label>
+                </td>
+            </tr>
+            <tr><th>Representante Legal:</th><td><input type="text" id="representanteLegal"></td></tr>
+            <tr><th>CPF Representante Legal:</th><td><input type="text" id="cpfRepresentanteLegal"></td></tr>
+        </tbody>
+
+
         <tr><th colspan="2" style="text-align: center;"><button type="button" id="arca" onclick="Arca()">Consulta SCPC e Serasa</button></td></tr>
         <tr><th>Resultado Consulta:</th><td><div id="restricaoInfo"></div></td></tr>
         <tr><th>Celular:</th><td><input type="text" id="celular"  onchange="validarCelular(this.value)"></td></tr>
         <tr><th>WhatsApp:</th><td><input type="text" id="whatsapp"  onchange="validarCelular(this.value)"></td></tr>
         <tr><th>Email:</th><td><input type="email" id="email"  onchange="validarEmail(this.value)"></td></tr>
-        <tr><th>Sexo:</th><td id="sexo" style="text-align: center;">
-            <label><input type="radio" id="M" name="sexo" value="M"> Masculino</label>
-            <label><input type="radio" id="F" name="sexo" value="F"> Feminino</label>
-        </td></tr>
     </table>
     <table>
         <tr><th>Condomínio:</th><td><select  id="condominio" onchange="buscarDadosCondominio()">
