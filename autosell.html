@@ -47,7 +47,7 @@
         margin-top: 5px;    
     }
     th {
-        width: 25%;
+        width: 0%;
         border: none;
         vertical-align: center;
         border-radius: 10px;
@@ -100,7 +100,7 @@
     .produtos {
         display: flex;
         flex-direction: column;
-        gap: 4px; /* Espaçamento entre os checkboxes */
+        gap: 0px; /* Espaçamento entre os checkboxes */
         /* flex-wrap: wrap; */
     }
 
@@ -109,9 +109,8 @@
         justify-content: space-between;
         align-items: center;
         width: 100%;
-        gap: 5px;
+        gap: 0px;
         text-align: left;
-        /* width: 90%; Ajuste para 2 colunas (50% com o espaço entre os itens) */
     }
 
     .produtos input[type="checkbox"] {
@@ -140,11 +139,18 @@
         margin-right: 0px; /* Espaço entre os checkboxes */
     }
 
-    #tipoCliente label {
-        display: inline-block;
-        margin-right: 0px; /* Espaço entre os checkboxes */
+    #tipoCliente {
+        display: flex;
+        align-items: center;
+        gap: 30px;
     }
-    
+
+    #tipoCliente label{
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
     #contribuinteIcms label {
         display: inline-flex; /* Alinha o checkbox e o texto na mesma linha */
         align-items: center; /* Alinha verticalmente o texto com o checkbox */
@@ -161,9 +167,16 @@
         margin-right: 0px; /* Espaço entre os checkboxes */
     }
 
+    #moradia {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
     #moradia label {
-        display: inline-block;
-        margin-right: 0px; /* Espaço entre os checkboxes */
+        display: flex;
+        align-items: center;
+        gap: 5px;
     }
 
     #arca {
@@ -1013,7 +1026,7 @@ async function enviarFormulario(event) {
         </select></td></tr>
         <tr><th>SVA's Inclusos:</th><td><div id="planoInfo"></div></td></tr>
         <tr><th>Produtos Adicionais:</th>
-            <td class="produtos">
+            <td class="produtos" >
                 <label>
                     <input type="checkbox" id="251" name="produtos[]" value="Repetidor"> Repetidor
                     <input type="number" id="251_qtd" name="qtd_produtos[]" placeholder="Qtd" min="0" max="10">
